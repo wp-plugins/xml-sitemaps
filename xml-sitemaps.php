@@ -3,7 +3,7 @@
 Plugin Name: XML Sitemaps
 Plugin URI: http://www.semiologic.com/software/marketing/xml-sitemaps/
 Description: Automatically generates XML Sitemaps for your site and notifies search engines when they're updated.
-Version: 1.0.3
+Version: 1.1
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 */
@@ -107,6 +107,8 @@ class xml_sitemaps
 		
 		$file = WP_CONTENT_DIR . '/sitemaps/sitemap.xml';
 		
+		if ( !xml_sitemap::generate() ) return;
+		
 		if ( file_exists($file . '.gz') )
 		{
 			$file = trailingslashit(get_option('home')) . 'sitemap.xml.gz';
@@ -150,29 +152,10 @@ class xml_sitemaps
 		# ignore non-published data and password protected data
 		if ( $post->post_status != 'publish' || $post->post_password != '' ) return;
 		
-		xml_sitemaps::flush();
+		xml_sitemaps::rm(WP_CONTENT_DIR . '/sitemaps');
 		
 		update_option('xml_sitemaps_ping', 1);
 	} # save_post()
-	
-	
-	#
-	# flush()
-	#
-	
-	function flush()
-	{
-		foreach ( array(
-		#	ABSPATH . 'sitemap.xml',
-		#	ABSPATH . 'sitemap.xml.gz',
-			WP_CONTENT_DIR . '/sitemaps',
-				) as $file )
-		{
-			if ( !xml_sitemaps::rm($file) ) return false;
-		}
-		
-		return true;
-	} # flush()
 	
 	
 	#
@@ -181,6 +164,12 @@ class xml_sitemaps
 	
 	function generate()
 	{
+		if ( abs(intval(WP_MEMORY_LIMIT)) < 128
+			&& function_exists('memory_get_usage')
+			&& ( (int) @ini_get('memory_limit') < 128 )
+			)
+			@ini_set('memory_limit', '128M');
+		
 		include_once dirname(__FILE__) . '/xml-sitemaps-utils.php';
 		
 		# dump wp cache
@@ -221,7 +210,7 @@ class xml_sitemaps
 			
 			$sitemap = basename($_SERVER['REQUEST_URI']);
 			
-			if ( !file_exists(WP_CONTENT_DIR . '/sitemaps/' . $sitemap) )
+			if ( xml_sitemaps_debug || !file_exists(WP_CONTENT_DIR . '/sitemaps/' . $sitemap) )
 			{
 				if ( !xml_sitemaps::generate() ) return;
 			}
@@ -283,8 +272,9 @@ EOF;
 			$wp_rewrite =& new WP_Rewrite;
 		}
 		
-		if ( !function_exists('save_mod_rewrite_rules') )
+		if ( !function_exists('save_mod_rewrite_rules') || !function_exists('get_home_path') )
 		{
+			include_once ABSPATH . 'wp-admin/includes/file.php';
 			include_once ABSPATH . 'wp-admin/includes/misc.php';
 		}
 		
@@ -334,7 +324,9 @@ EOF;
 					. '</p>' . "\n"
 					. '</div>' . "\n\n";
 			}
-			elseif ( !xml_sitemaps::flush() )
+			elseif ( !xml_sitemaps::rm(WP_CONTENT_DIR . '/sitemaps')
+				|| !xml_sitemaps::mkdir(WP_CONTENT_DIR . '/sitemaps')
+				|| !is_writable('.htaccess') )
 			{
 				echo '<div class="error">'
 					. '<p>'
@@ -368,7 +360,7 @@ EOF;
 		else
 		{
 			# clean up
-			$active &= xml_sitemaps::flush();
+			$active &= xml_sitemaps::rm(WP_CONTENT_DIR . '/sitemaps');
 			
 			# create folder
 			if ( $active )
@@ -433,7 +425,7 @@ EOF;
 	
 	function mkdir($dir)
 	{
-		return @mkdir($dir) && @chmod($dir, 0777);
+		return @mkdir($dir) && chmod($dir, 0777);
 	} # mkdir()
 	
 	

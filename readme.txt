@@ -1,9 +1,9 @@
 === XML Sitemaps ===
-Contributors: Denis-de-Bernardy, Semiologic
+Contributors: Denis-de-Bernardy
 Donate link: http://buy.semiologic.com/drink
 Tags: google-sitemap, sitemaps, xml-sitemaps, xml-sitemap, google, semiologic
 Requires at least: 2.7
-Tested up to: 2.7
+Tested up to: 2.7.2
 Stable tag: trunk
 
 Automatically generates XML Sitemaps for your site and notifies search engines when they're updated.
@@ -26,7 +26,7 @@ Lastly, and contrary to the zillions of plugins that try to do the same as this 
 
 1. Upload the plugin folder to the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
-1. The plugin will then guide you through the installation process
+1. The plugin will then guide you through the installation process if any manual steps are necessary
 
 
 = Help Me! =
