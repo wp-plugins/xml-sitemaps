@@ -129,7 +129,7 @@ class sitemap_xml {
 			
 			$loc = user_trailingslashit(get_option('home'));
 		} else {
-			$loc = get_permalink($this->blog_page_id);
+			$loc = apply_filters('the_permalink', get_permalink($this->blog_page_id));
 		}
 		
 		$stats = $wpdb->get_row("
@@ -261,7 +261,7 @@ class sitemap_xml {
 		
 		foreach ( $posts as $post ) {
 			$this->write(
-				get_permalink($post->ID),
+				apply_filters('the_permalink', get_permalink($post->ID)),
 				$post->lastmod,
 				$post->changefreq,
 				$post->priority
@@ -329,7 +329,7 @@ class sitemap_xml {
 		
 		foreach ( $posts as $post ) {
 			$this->write(
-				get_permalink($post->ID),
+				apply_filters('the_permalink', get_permalink($post->ID)),
 				$post->lastmod,
 				$post->changefreq,
 				.6
@@ -350,7 +350,8 @@ class sitemap_xml {
 		
 		$terms = get_terms('category', array('hide_empty' => true, 'exclude' => defined('main_cat_id') ? main_cat_id : ''));
 		
-		if ( !$terms ) return; # no cats
+		if ( !$terms ) # no cats
+			return;
 
 		foreach ( $terms as $term ) {
 			$sql = "
@@ -611,10 +612,18 @@ class sitemap_xml {
 		if ( !( $this->fp = fopen($this->file, 'w+') ) )
 			return false;
 		
+		global $wp_filter;
+		if ( is_array($wp_filter['option_blog_public']) ) {
+			$this->filter_backup = $wp_filter['option_blog_public'];
+		} else {
+			$this->filter_backup = array();
+		}
+		unset($wp_filter['option_blog_public']);
+		
 		$o = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
 			. ( xml_sitemaps_debug
-				? '<!-- Debug: XML Sitemaps -->'
-				: '<!-- Generator: XML Sitemaps -->'
+				? '<!-- Debug: XML Sitemaps ' . xml_sitemaps_version . ' -->'
+				: '<!-- Generator: XML Sitemaps ' . xml_sitemaps_version . ' -->'
 				) . "\n"
 			. '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 		
@@ -632,6 +641,9 @@ class sitemap_xml {
 
 	function close() {
 		if ( isset($this->fp) && $this->fp ) {
+			global $wp_filter;
+			$wp_filter['option_blog_public'] = $this->filter_backup;
+			
 			$o = '</urlset>';
 			
 			fwrite($this->fp, $o);
