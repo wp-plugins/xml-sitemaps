@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy
 Donate link: http://www.semiologic.com/partners/
 Tags: google-sitemap, sitemaps, xml-sitemaps, xml-sitemap, google, semiologic
 Requires at least: 2.8
-Tested up to: 2.9
+Tested up to: 2.9.1
 Stable tag: trunk
 
 Automatically generates XML Sitemaps for your site and notifies search engines when they're updated.
@@ -41,10 +41,17 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 Actually, it is. But it's not refreshed each time you save your posts and pages. Doing so would be far too resource intensive on large sites.
 
-It's generated only when explicitly requests, by visiting domain.com/sitemaps.xml, and cached in wp-content/sitemaps -- until it needs to be refreshed once again.
+It's generated only when explicitly requested, by visiting domain.com/sitemaps.xml, and then cached in wp-content/sitemaps -- until it needs to be refreshed once again.
 
 
 == Change Log ==
+
+= 1.6 =
+
+- WPMU compat
+- Improve memcached support
+- Handle custom content dir properly
+- Add a filter so other plugins can attach pages
 
 = 1.5 =
 

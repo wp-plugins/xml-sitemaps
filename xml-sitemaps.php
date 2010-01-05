@@ -3,7 +3,7 @@
 Plugin Name: XML Sitemaps
 Plugin URI: http://www.semiologic.com/software/xml-sitemaps/
 Description: Automatically generates XML Sitemaps for your site and notifies search engines when they're updated.
-Version: 1.5
+Version: 1.6
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: xml-sitemaps
@@ -22,7 +22,7 @@ http://www.opensource.org/licenses/gpl-2.0.php
 
 load_plugin_textdomain('xml-sitemaps', false, dirname(plugin_basename(__FILE__)) . '/lang');
 
-define('xml_sitemaps_version', '1.4');
+define('xml_sitemaps_version', '1.6');
 
 if ( !defined('xml_sitemaps_debug') )
 	define('xml_sitemaps_debug', false);
@@ -135,8 +135,8 @@ class xml_sitemaps {
 		
 		include_once dirname(__FILE__) . '/xml-sitemaps-utils.php';
 		
-		# dump wp cache
-		wp_cache_flush();
+		# disable persistent groups, so as to not pollute memcached
+		wp_cache_add_non_persistent_groups(array('posts', 'post_meta'));
 		
 		# only keep fields involved in permalinks
 		add_filter('posts_fields_request', array('xml_sitemaps', 'kill_query_fields'));
@@ -147,9 +147,6 @@ class xml_sitemaps {
 		
 		# restore fields
 		remove_filter('posts_fields_request', array('xml_sitemaps', 'kill_query_fields'));
-		
-		# dump wp cache
-		wp_cache_flush();
 		
 		return $return;
 	} # generate()
@@ -169,8 +166,14 @@ class xml_sitemaps {
 				$_SERVER['REQUEST_URI'],
 				array($home_path . '/sitemap.xml', $home_path . '/sitemap.xml.gz')
 				)
+			&& strpos($_SERVER['HTTP_HOST'], '/') === false
 			) {
-			$dir = WP_CONTENT_DIR . '/sitemaps/';
+			$dir = WP_CONTENT_DIR . '/sitemaps';
+			if ( function_exists('is_site_admin') && defined('VHOST') && VHOST )
+				$dir .= '/' . $_SERVER['HTTP_HOST'];
+			$home_path = parse_url(get_option('home'));
+			$home_path = isset($home_path['path']) ? rtrim($home_path['path'], '/') : '';
+			$dir .= $home_path;
 			
 			if ( !xml_sitemaps::clean($dir) )
 				return;
@@ -207,14 +210,13 @@ class xml_sitemaps {
 	 **/
 	
 	function rewrite_rules($rules) {
-		$home_path = parse_url(get_option('home'));
-		$home_path = isset($home_path['path']) ? rtrim($home_path['path'], '/') : '';
-
-		$site_path = parse_url(get_option('siteurl'));
-		$site_path = isset($site_path['path']) ? rtrim($site_path['path'], '/') : '';
+		$sitemaps_path = WP_CONTENT_DIR . '/sitemaps';
+		$sitemaps_url = parse_url(WP_CONTENT_URL . '/sitemaps');
+		$sitemaps_url = $sitemaps_url['path'];
 		
 		$extra = <<<EOS
-RewriteRule ^(sitemap\.xml|sitemap\.xml\.gz)$ $site_path/wp-content/sitemaps/$1 [L]
+RewriteCond $sitemaps_path%{REQUEST_URI} -f
+RewriteRule \.xml(\.gz)?$ $sitemaps_url%{REQUEST_URI} [L]
 EOS;
 		
 		if ( preg_match("/RewriteBase.+\n*/i", $rules, $rewrite_base) ) {
@@ -269,10 +271,10 @@ EOS;
 					. __('XML Sitemaps requires MySQL 4.1.1 or later. It\'s time to <a href="http://www.semiologic.com/resources/wp-basics/wordpress-server-requirements/">change hosts</a> if yours doesn\'t want to upgrade.', 'xml-sitemaps')
 					. '</p>' . "\n"
 					. '</div>' . "\n\n";
-			} elseif ( @ini_get('safe_mode') ) {
+			} elseif ( @ini_get('safe_mode') || @ini_get('open_basedir') ) {
 				echo '<div class="error">'
 					. '<p>'
-					. __('Safe mode is used on your server. It\'s time to <a href="http://www.semiologic.com/resources/wp-basics/wordpress-server-requirements/">change hosts</a> if yours doesn\'t want to upgrade.', 'xml-sitemaps')
+					. __('Safe mode or an open_basedir restriction is used on your server. It\'s time to <a href="http://www.semiologic.com/resources/wp-basics/wordpress-server-requirements/">change hosts</a> if yours doesn\'t want to upgrade.', 'xml-sitemaps')
 					. '</p>' . "\n"
 					. '</div>' . "\n\n";
 			} elseif ( !get_option('permalink_structure') ) {
@@ -321,7 +323,7 @@ EOS;
 		global $wpdb;
 		if ( version_compare($wpdb->db_version(), '4.1.1', '<') ) {
 			$active = false;
-		} elseif ( ini_get('safe_mode') ) {
+		} elseif ( @ini_get('safe_mode') || @ini_get('open_basedir') ) {
 			$active = false;
 		} else {
 			# clean up
