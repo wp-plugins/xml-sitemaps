@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy
 Donate link: http://www.semiologic.com/partners/
 Tags: google-sitemap, sitemaps, xml-sitemaps, xml-sitemap, google, semiologic
 Requires at least: 2.8
-Tested up to: 2.9.1
+Tested up to: 2.9.2
 Stable tag: trunk
 
 Automatically generates XML Sitemaps for your site and notifies search engines when they're updated.
@@ -45,6 +45,10 @@ It's generated only when explicitly requested, by visiting domain.com/sitemaps.x
 
 
 == Change Log ==
+
+= 1.6.1 =
+
+- Improve safe_mode and open_basedir handling
 
 = 1.6 =
 
