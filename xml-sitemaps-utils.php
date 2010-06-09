@@ -623,7 +623,8 @@ class sitemap_xml {
 			return false;
 		
 		global $wp_filter;
-		if ( is_array($wp_filter['option_blog_public']) ) {
+		if ( isset($wp_filter['option_blog_public']) &&
+		    is_array($wp_filter['option_blog_public']) ) {
 			$this->filter_backup = $wp_filter['option_blog_public'];
 		} else {
 			$this->filter_backup = array();
@@ -673,7 +674,7 @@ class sitemap_xml {
 			
 			# move
 			$dir = WP_CONTENT_DIR . '/sitemaps';
-			if ( function_exists('is_site_admin') && defined('VHOST') && VHOST )
+			if ( defined('SUBDOMAIN_INSTALL') && SUBDOMAIN_INSTALL )
 				$dir .= '/' . $_SERVER['HTTP_HOST'];
 			$home_path = parse_url(get_option('home'));
 			$home_path = isset($home_path['path']) ? rtrim($home_path['path'], '/') : '';
