@@ -1,10 +1,13 @@
 === XML Sitemaps ===
-Contributors: Denis-de-Bernardy
+Contributors: Denis-de-Bernardy, Mike_Koepke
 Donate link: http://www.semiologic.com/partners/
 Tags: google-sitemap, sitemaps, xml-sitemaps, xml-sitemap, google, semiologic
-Requires at least: 2.8
-Tested up to: 3.2.1
+Requires at least: 3.1
+Tested up to: 3.5.1
 Stable tag: trunk
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+
 
 Automatically generates XML Sitemaps for your site and notifies search engines when they're updated.
 
@@ -31,8 +34,8 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 == Installation ==
 
 1. Upload the plugin folder to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. The plugin will then guide you through the installation process if any manual steps are necessary
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. The plugin will then guide you through the installation process if any manual steps are necessary
 
 
 == FAQ ==
@@ -45,6 +48,15 @@ It's generated only when explicitly requested, by visiting domain.com/sitemaps.x
 
 
 == Change Log ==
+
+= 1.7.1 =
+
+- Rebuild sitemap if post is moved to trash
+
+= 1.7 =
+
+- WP 3.5 compat
+- Updated for Bing ping url and removed yahoo ping as it has been discontinued
 
 = 1.6.2 =
 
